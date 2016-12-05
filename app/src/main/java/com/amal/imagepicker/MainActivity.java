@@ -1,12 +1,16 @@
 package com.amal.imagepicker;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -27,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private final int PICK_IMAGE = 12345;
     private final int TAKE_PICTURE = 6352;
+    private static final int REQUEST_CAMERA_ACCESS_PERMISSION =5674;
     private Bitmap bitmap;
 
     private ImageView imageView;
@@ -54,7 +59,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.fromCamera:
-                getImageFromCamera();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                        && ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA},
+                            REQUEST_CAMERA_ACCESS_PERMISSION);
+                }else {
+                    getImageFromCamera();
+                }
                 break;
             case R.id.fromGallery:
                 getImageFromGallery();
@@ -134,6 +146,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bitmap = (Bitmap) extras.get("data");
                 imageView.setImageBitmap(bitmap);
             }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_CAMERA_ACCESS_PERMISSION:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    getImageFromCamera();
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 }
